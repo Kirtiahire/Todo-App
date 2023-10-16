@@ -3,8 +3,8 @@ from django.http import HttpResponse
 from django.contrib.auth import authenticate , login as loginUser , logout
 from django.contrib.auth.forms import UserCreationForm , AuthenticationForm
 # Create your views here.
-from app.forms import TODOForm
-from app.models import TODO
+from todo.forms import TODOForm
+from todo.models import TODO
 from django.contrib.auth.decorators import login_required
 
 
@@ -61,6 +61,37 @@ def signup(request):
                 return redirect('login')
         else:
             return render(request , 'signup.html' , context=context)
+
+
+
+@login_required(login_url='login')
+def add_todo(request):
+    if request.user.is_authenticated:
+        user = request.user
+        print(user)
+        form = TODOForm(request.POST)
+        if form.is_valid():
+            print(form.cleaned_data)
+            todo = form.save(commit=False)
+            todo.user = user
+            todo.save()
+            print(todo)
+            return redirect("home")
+        else: 
+            return render(request , 'index.html' , context={'form' : form})
+
+
+def delete_todo(request , id ):
+    print(id)
+    TODO.objects.get(pk = id).delete()
+    return redirect('home')
+
+def change_todo(request , id  , status):
+    todo = TODO.objects.get(pk = id)
+    todo.status = status
+    todo.save()
+    return redirect('home')
+
 
 def signout(request):
     logout(request)
